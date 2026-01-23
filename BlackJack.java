@@ -1,5 +1,5 @@
 /* 
-* Ryan Lee
+* Ryan Lee & Michael Coker
 * 1/22/2026
 * CPSC-39-12704
 * ArrayAndCards Review
@@ -11,6 +11,16 @@ import java.util.Scanner;
 
 public class BlackJack {
 
+    /* Ryan
+    Suits and Ranks are determined by using the remainder of 4 (How many suits there are) and 13 (how many ranks there are).
+    That remainder determines what suit/rank the card will be. 
+    For example, in SUITS:
+    Hearts = index 0
+    Diamonds = index 1
+    Clubs = index 2
+    Spades = index 3
+    */
+
     // Arrays for suits, ranks, and current deck.
     private static final String[] SUITS = { "Hearts", "Diamonds", "Clubs", "Spades" };
     private static final String[] RANKS = { "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King",
@@ -18,6 +28,11 @@ public class BlackJack {
     private static final int[] DECK = new int[52];
     private static int currentCardIndex = 0;
 
+    /* Ryan
+    Redid dealer card data storage to account for Ace check. Added dealerData to store array from dealInitialDealerCards and modified dealerTotal
+    to take in 0 index of dealerData array as total. Boolean dealerAce added to check if index 1 of dealerData (face card rank) is true/false; passed into
+    playerTurn to check for Ace and offer insurance.
+    */
     // Run game.
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -26,10 +41,11 @@ public class BlackJack {
         shuffleDeck();
 
         int playerTotal = dealInitialPlayerCards();
-        int dealerTotal = dealInitialDealerCards();
-        boolean dealerAce = false;
+        int[] dealerData = dealInitialDealerCards();
+        int dealerTotal = dealerData[0];
+        boolean dealerAce = (dealerData[1] == 12);
 
-        playerTotal = playerTurn(scanner, playerTotal);
+        playerTotal = playerTurn(scanner, playerTotal, dealerAce);
         if (playerTotal > 21) {
             System.out.println("You busted! Dealer wins.");
             return;
@@ -78,20 +94,49 @@ public class BlackJack {
         return cardValue(card1) + cardValue(card2);
     }
 
+    
+    /* Ryan
+    Completely redid the entire method. Added hiddenCard and faceCard to hold values for both hidden and face cards for dealer. Refer to the
+    top to see how card values are chosen. Added totalScore to independently calculate and return total. Method now returns array with total 
+    and face card value to check for Ace. System.out.print now outputs only the face card.
+    */
+
     // Handing out dealer starting cards.
-    private static int dealInitialDealerCards() {
-        int card1 = dealCard();
-        System.out.println("Dealer's card: " + RANKS[card1] + " of " + SUITS[DECK[currentCardIndex] % 4]);
-        return cardValue(card1);
+    private static int[] dealInitialDealerCards() {
+        int hiddenCard = dealCard();
+        int faceCard = dealCard();
+        int totalScore = cardValue(hiddenCard) + cardValue(faceCard);
+        System.out.println("Dealer's card: " + RANKS[faceCard] + " of " + SUITS[faceCard % 4]);
+        return new int[] {totalScore, faceCard};
     }
 
     // Simulates player turn.
-    private static int playerTurn(Scanner scanner, int playerTotal) {
+    private static int playerTurn(Scanner scanner, int playerTotal, boolean dealerAce) {
         
+        /* Ryan
+        Added a boolean value to pass into playerTurn for Ace check. If statement below checks if true.
+        If true then system will ask if player wants insurance; accepts only yes/no inputs. No betting
+        system implemented yet, assume system automatically allocates bet when insurance is accepted.
+        */
+
+        // Insurance Check and Offering
+        if (dealerAce) { // Runs if dealerAce is true.
+
+            // Asks player if they want insurance and stores input into insurance Option.
+            System.out.print("Dealer has an Ace. Do you want insurance? (Yes/No): ");
+            String insuranceOption = scanner.next().toLowerCase();
+            
+            // Checks if player said yes or no.
+            if (insuranceOption.equals("yes")) {
+                System.out.println("Insurance accepted.");
+            } else {
+                System.out.println("Insurance declined.");
+            }
+        }
+
+
         // Continously works until player stands.
         while (true) {
-            // if statement if dealer's card is ace. Offer insurance. 
-            // if (dealerAce == true) 
             // Player actions
             System.out.println("Your total is " + playerTotal + ". Do you want to hit or stand?");
             String action = scanner.nextLine().toLowerCase();
